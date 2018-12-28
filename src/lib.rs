@@ -135,7 +135,7 @@ impl Ulid {
   ///
   /// let ulid = Ulid::from_slice(&bytes);
   ///
-  /// let expected_ulid = Err(yulid::BytesError::new(16, 4,));
+  /// let expected_ulid = Err(yulid::BytesError::new(16, 4));
   ///
   /// assert_eq!(expected_ulid, ulid);
   /// ```
@@ -255,7 +255,7 @@ impl Ulid {
     ])
   }
 
-  /// Returns the four field values of the [`Ulid`].
+  /// Returns the five field values of the [`Ulid`].
   ///
   /// These values can be passed to the [`Ulid::from_fields()`] method to get the original [`Ulid`]
   /// back.
