@@ -1,7 +1,13 @@
 [package]
 name = "yulid"
 version = "0.1.0"
-authors = ["Kyle Clemens <git@kyleclemens.com>"]
+description = "A library to generate and parse ULIDs."
+documentation = "https://docs.rs/yulid"
+license = "MIT"
+homepage = "https://github.com/jkcclemens/yulid"
+readme = "README.md"
+repository = "https://github.com/jkcclemens/yulid"
+authors = ["Kyle Clemens <yulid@kyleclemens.com>"]
 edition = "2018"
 
 [dependencies]
