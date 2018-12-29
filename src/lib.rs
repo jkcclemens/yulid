@@ -12,6 +12,7 @@
 //! be assumed that an unintentional collision would be extremely unlikely.
 
 #![cfg_attr(test, feature(test))]
+#![warn(missing_docs)]
 
 use byteorder::{ByteOrder, BigEndian};
 use chrono::{DateTime, TimeZone, Utc};

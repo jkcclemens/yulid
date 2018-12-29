@@ -23,6 +23,7 @@ impl Ulid {
 }
 
 impl Lowercase {
+  /// Creates a [`Lowercase`] instance from a [`Ulid`].
   pub const fn from_ulid(ulid: Ulid) -> Self {
     Lowercase(ulid)
   }
@@ -36,6 +37,7 @@ impl Lowercase {
 }
 
 impl<'a> LowercaseRef<'a> {
+  /// Creates a [`LowercaseRef`] instance from a [`Ulid`].
   pub const fn from_ulid(ulid: &'a Ulid) -> Self {
     LowercaseRef(ulid)
   }

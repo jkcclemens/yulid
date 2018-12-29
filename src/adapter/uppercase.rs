@@ -23,6 +23,7 @@ impl Ulid {
 }
 
 impl Uppercase {
+  /// Creates a [`Uppercase`] instance from a [`Ulid`].
   pub const fn from_ulid(ulid: Ulid) -> Self {
     Uppercase(ulid)
   }
@@ -36,6 +37,7 @@ impl Uppercase {
 }
 
 impl<'a> UppercaseRef<'a> {
+  /// Creates a [`UppercaseRef`] instance from a [`Ulid`].
   pub const fn from_ulid(ulid: &'a Ulid) -> Self {
     UppercaseRef(ulid)
   }
