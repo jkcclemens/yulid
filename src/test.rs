@@ -4,6 +4,9 @@ use crate::{Bytes, Ulid};
 
 use self::test::Bencher;
 
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+
 const TEST_BYTES: Bytes = [
   1, 103, 245, 214, 154, 12, // timestamp
   107, 200, 228, 194, 102, 58, 236, 82, 247, 87, // random
