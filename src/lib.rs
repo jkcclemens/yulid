@@ -12,7 +12,12 @@
 //! be assumed that an unintentional collision would be extremely unlikely.
 
 #![cfg_attr(test, feature(test))]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(feature = "std"), feature(alloc))]
 #![warn(missing_docs)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
 
 use byteorder::{BigEndian, ByteOrder};
 

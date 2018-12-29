@@ -2,6 +2,9 @@
 
 use crate::Ulid;
 
+#[cfg(not(feature = "std"))]
+use alloc::string::String;
+
 /// An adapter for formatting a [`Ulid`] as an uppercase string.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Uppercase(Ulid);
