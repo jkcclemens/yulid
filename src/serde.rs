@@ -1,3 +1,5 @@
+//! [`serde`] implementations for [`Ulid`].
+
 use crate::Ulid;
 
 use serde::{

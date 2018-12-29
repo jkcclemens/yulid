@@ -10,12 +10,21 @@ repository = "https://github.com/jkcclemens/yulid"
 authors = ["Kyle Clemens <yulid@kyleclemens.com>"]
 edition = "2018"
 
+[features]
+default = ["std"]
+std = ["chrono", "rand"]
+
+[target.'cfg(not(feature = "std"))'.dependencies]
+byteorder = { version = "1", default-features = false, features = ["i128"] }
+
+[target.'cfg(feature = "std")'.dependencies]
+byteorder = { version = "1", features = ["i128"] }
+
 [dependencies]
 # published 0.4 has an overflow bug with negative i64s being used as timestamps (#292)
 # chrono = "0.4"
-chrono = { git = "https://github.com/chronotope/chrono" }
-byteorder = { version = "1", features = ["i128"] }
-rand = "0.6"
+chrono = { git = "https://github.com/chronotope/chrono", optional = true }
+rand = { version = "0.6", optional = true }
 uuid = { version = "0.7", optional = true }
 serde = { version = "1", optional = true }
 

@@ -2,8 +2,6 @@ extern crate test;
 
 use crate::{Bytes, Ulid};
 
-use chrono::{TimeZone, Utc};
-
 use self::test::Bencher;
 
 const TEST_BYTES: Bytes = [
@@ -18,17 +16,6 @@ const TEST_FIELD_2: u16 = 39436;
 const TEST_FIELD_3: u16 = 27592;
 const TEST_FIELD_4: u32 = 3837945402;
 const TEST_FIELD_5: u32 = 3964860247;
-
-#[bench]
-fn create_new(b: &mut Bencher) {
-  b.iter(|| Ulid::new())
-}
-
-#[bench]
-fn create_static_timestamp(b: &mut Bencher) {
-  let now = Utc::now();
-  b.iter(|| Ulid::from_timestamp(now))
-}
 
 #[bench]
 fn bench_from_str(b: &mut Bencher) {
@@ -102,17 +89,6 @@ fn timestamp_millis() {
   assert_eq!(
     ulid.as_millis(),
     TEST_MILLIS,
-  );
-}
-
-#[test]
-fn timestamp() {
-  let ulid = Ulid::from_bytes(TEST_BYTES);
-  let ts = Utc.timestamp_millis(TEST_MILLIS);
-
-  assert_eq!(
-    ulid.as_timestamp(),
-    ts,
   );
 }
 
@@ -217,6 +193,37 @@ mod serde {
     assert_eq!(
       result,
       TEST_CBOR,
+    );
+  }
+}
+
+#[cfg(feature = "std")]
+mod std_support {
+  use crate::Ulid;
+
+  use super::test::Bencher;
+
+  use chrono::{TimeZone, Utc};
+
+  #[bench]
+  fn create_new(b: &mut Bencher) {
+    b.iter(|| Ulid::new())
+  }
+
+  #[bench]
+  fn create_static_timestamp(b: &mut Bencher) {
+    let now = Utc::now();
+    b.iter(|| Ulid::from_timestamp(now))
+  }
+
+  #[test]
+  fn timestamp() {
+    let ulid = Ulid::from_bytes(super::TEST_BYTES);
+    let ts = Utc.timestamp_millis(super::TEST_MILLIS);
+
+    assert_eq!(
+      ulid.as_timestamp(),
+      ts,
     );
   }
 }

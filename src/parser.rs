@@ -115,5 +115,3 @@ impl ParseError {
     }
   }
 }
-
-impl std::error::Error for ParseError {}

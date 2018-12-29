@@ -14,25 +14,26 @@
 #![cfg_attr(test, feature(test))]
 #![warn(missing_docs)]
 
-use byteorder::{ByteOrder, BigEndian};
-use chrono::{DateTime, TimeZone, Utc};
-use rand::{
-  distributions::{Distribution, Standard},
-  Rng,
-  thread_rng,
-};
+use byteorder::{BigEndian, ByteOrder};
 
-use std::str::FromStr;
-
-pub mod prelude;
-pub mod adapter;
-pub mod parser;
-#[cfg(feature = "uuid")]
-pub mod uuid;
-#[cfg(feature = "serde")]
-pub mod serde;
 #[cfg(test)]
 mod test;
+
+pub mod prelude;
+pub mod parser;
+
+#[cfg(feature = "std")]
+pub mod generation;
+#[cfg(feature = "std")]
+pub mod components;
+pub mod adapter;
+mod core_support;
+#[cfg(feature = "std")]
+mod std_support;
+#[cfg(feature = "uuid")]
+mod uuid;
+#[cfg(feature = "serde")]
+mod serde;
 
 pub use self::parser::ParseError;
 
@@ -44,34 +45,6 @@ pub type Bytes = [u8; 16];
 pub struct Ulid(Bytes);
 
 impl Ulid {
-  /// Creates a random [`Ulid`] with the current timestamp.
-  ///
-  /// This uses the [`rand`] crate's default task RNG as the source of random numbers. If you'd like
-  /// to use a custom generator, don't use this method: use either the [`Ulid::from_rng()`] method or the
-  /// `gen` method on `rand`'s [`Rng`].
-  #[inline]
-  pub fn new() -> Ulid {
-    Ulid::from_rng(&mut thread_rng())
-  }
-
-  /// Creates a random [`Ulid`] with the current timestamp, using a custom source of randomness.
-  pub fn from_rng<R: Rng + ?Sized>(rng: &mut R) -> Ulid {
-    // get the timestamp portion of the ulid
-    let millis = Utc::now().timestamp_millis();
-
-    // create the buffer holding the raw bytes
-    let mut buf = [0; 16];
-
-    // write the timestamp section into the buffer
-    BigEndian::write_i48(&mut buf, millis);
-
-    // fill the rest of the buffer with random bytes
-    rng.fill(&mut buf[6..]);
-
-    // construct the resulting ulid
-    Ulid(buf)
-  }
-
   /// Creates a [`Ulid`] using the supplied bytes.
   ///
   /// # Examples
@@ -100,7 +73,7 @@ impl Ulid {
   ///
   /// let ulid = Ulid::from_bytes(bytes);
   /// ```
-  pub const fn from_bytes(bytes: Bytes) -> Ulid {
+  pub const fn from_bytes(bytes: Bytes) -> Self {
     Ulid(bytes)
   }
 
@@ -140,7 +113,7 @@ impl Ulid {
   ///
   /// assert_eq!(expected_ulid, ulid);
   /// ```
-  pub fn from_slice(slice: &[u8]) -> Result<Ulid, BytesError> {
+  pub fn from_slice(slice: &[u8]) -> Result<Self, BytesError> {
     let len = slice.len();
     if len != 16 {
       return Err(BytesError::new(16, len));
@@ -149,56 +122,6 @@ impl Ulid {
     let mut bytes = [0; 16];
     bytes.copy_from_slice(slice);
     Ok(Ulid::from_bytes(bytes))
-  }
-
-  /// Creates a [`Ulid`] from a timestamp.
-  ///
-  /// This function will use the provided timestamp for the timestamp portion of the [`Ulid`], and
-  /// the [`rand`] crate's default task RNG will be used for the random portion.
-  ///
-  /// To use a custom source of randomness with a timestamp, see
-  /// [`Ulid::from_timestamp_with_rng()`].
-  #[inline]
-  pub fn from_timestamp(timestamp: DateTime<Utc>) -> Self {
-    Ulid::from_timestamp_with_rng(timestamp, &mut thread_rng())
-  }
-
-  /// Creates a [`Ulid`] from a timestamp and a custom RNG.
-  ///
-  /// This function will use the provided timestamp for the timestamp portion of the [`Ulid`], and
-  /// the provided [`Rng`] will be used for the random portion.
-  #[inline]
-  pub fn from_timestamp_with_rng<R: Rng>(timestamp: DateTime<Utc>, rng: &mut R) -> Self {
-    Ulid::from_millis_with_rng(timestamp.timestamp_millis(), rng)
-  }
-
-  /// Creates a [`Ulid`] from milliseconds.
-  ///
-  /// This function will use the provided milliseconds for the timestamp portion of the [`Ulid`],
-  /// and the [`rand`] crate's default task RNG will be used for the random portion.
-  ///
-  /// To use a custom source of randomness with milliseconds, see [`Ulid::from_millis_with_rng()`].
-  #[inline]
-  pub fn from_millis(millis: i64) -> Self {
-    Ulid::from_millis_with_rng(millis, &mut thread_rng())
-  }
-
-  /// Creates a [`Ulid`] from milliseconds and a custom RNG.
-  ///
-  /// This function will use the provided milliseconds for the timestamp portion of the [`Ulid`],
-  /// and the provided [`Rng`] will be used for the random portion.
-  #[inline]
-  pub fn from_millis_with_rng<R: Rng>(millis: i64, rng: &mut R) -> Self {
-    let mut buf = [0; 10];
-    rng.fill(&mut buf);
-
-    Ulid::from_millis_bytes(millis, buf)
-  }
-
-  /// Creates a [`Ulid`] from a timestamp and the provided bytes.
-  #[inline]
-  pub fn from_timestamp_bytes(timestamp: DateTime<Utc>, bytes: [u8; 10]) -> Self {
-    Ulid::from_millis_bytes(timestamp.timestamp_millis(), bytes)
   }
 
   /// Creates a [`Ulid`] from milliseconds and the provided bytes.
@@ -320,16 +243,6 @@ impl Ulid {
     &self.0
   }
 
-  /// Returns the timestamp portion of this [`Ulid`].
-  pub fn as_timestamp(&self) -> DateTime<Utc> {
-    Utc.timestamp_millis(self.as_millis())
-  }
-
-  /// Returns the timestamp portion of this [`Ulid`], capturing out-of-bounds values as `None`.
-  pub fn as_timestamp_opt(&self) -> Option<DateTime<Utc>> {
-    Utc.timestamp_millis_opt(self.as_millis()).single()
-  }
-
   /// Returns the milliseconds of the timestamp portion of the [`Ulid`].
   pub fn as_millis(&self) -> i64 {
     BigEndian::read_i48(self.as_bytes())
@@ -339,7 +252,7 @@ impl Ulid {
   ///
   /// Any of the formats generated by this module (uppercase, lowercase) are supported by this
   /// parsing function.
-  pub fn parse_str(input: &str) -> Result<Ulid, ParseError> {
+  pub fn parse_str(input: &str) -> Result<Self, ParseError> {
     if input.len() != 26 {
       return Err(ParseError::InvalidLength {
         found: input.len(),
@@ -372,33 +285,6 @@ impl BytesError {
   /// The number of bytes found.
   pub const fn found(&self) -> usize {
     self.found
-  }
-}
-
-impl std::error::Error for BytesError {}
-
-impl core::fmt::Display for BytesError {
-  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-    write!(
-      f,
-      "invalid bytes length: expected {}, found {}",
-      self.expected(),
-      self.found(),
-    )
-  }
-}
-
-impl Distribution<Ulid> for Standard {
-  fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Ulid {
-    Ulid::from_rng(rng)
-  }
-}
-
-impl FromStr for Ulid {
-  type Err = ParseError;
-
-  fn from_str(s: &str) -> Result<Self, Self::Err> {
-    Ulid::parse_str(s)
   }
 }
 

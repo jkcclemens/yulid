@@ -1,3 +1,5 @@
+//! Conversions to and from [`Uuid`](uuid::Uuid)/[`Ulid`].
+
 use crate::Ulid;
 
 use uuid::Uuid;
