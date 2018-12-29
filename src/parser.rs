@@ -108,30 +108,10 @@ pub enum ParseError {
 }
 
 impl ParseError {
-  fn _description(&self) -> &str {
+  pub(crate) fn _description(&self) -> &str {
     match *self {
       ParseError::InvalidCharacter { .. } => "invalid character",
       ParseError::InvalidLength { .. } => "invalid length",
-    }
-  }
-}
-
-impl std::fmt::Display for ParseError {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-    write!(f, "{}: ", self._description())?;
-
-    match *self {
-      ParseError::InvalidCharacter { found, index } => write!(
-        f,
-        "expected valid base32, found {} at index {}",
-        found,
-        index,
-      ),
-      ParseError::InvalidLength { found } => write!(
-        f,
-        "expected 26, found {}",
-        found,
-      ),
     }
   }
 }
